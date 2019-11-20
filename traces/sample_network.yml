@@ -1,0 +1,177 @@
+Devices:
+  - Name: r1
+    Interfaces:
+      - Name: r1@Eth0
+        Neighbor: null
+        InAcl: null
+        OutAcl: null
+        InBgpPolicy: null
+        OutBgpPolicy: null
+      - Name: r1@Eth1
+        Neighbor: r2@Eth1
+        InAcl: null
+        OutAcl: r1_outbound_host_permit
+      # added inbound and outbound BGP policies
+        InBgpPolicy: null
+        OutBgpPolicy: r1_default_bgp_export
+      - Name: r1@Eth2
+        Neighbor: r3@Eth1
+        InAcl: null
+        OutAcl: r1_outbound_host_permit
+        InBgpPolicy: null
+        OutBgpPolicy: r1_default_bgp_export
+    BgpConfig:
+      - AdvertisedRoutes: [70.4.194.0/24]
+      - InboundPolicies: []
+      - OutboundPolicies:
+        # BGP policies are lists of clauses that each have one or more
+        # match expressions and one or more actions.
+        - Name: "r1_default_bgp_export"
+          PolicyClauses:
+            # multiple match expressions are interpreted as a conjunction (all must match).
+            # the syntax 70.4.194.0/[24-32] matches a prefix with the first 24 bits of 70.4.194.__ 
+            # and a prefix length between 24 and 32.
+            - Matches: ["prefix: 70.4.194.0/[24-32]"]
+            # actions are processed left to right. 
+            # first this adds community tag 1, then allows the route through.
+              Actions: ["add tag 1", "allow"]
+            # if the first match was unsuccessful, then we fall through.
+            # the empty list of matches is equivalent to "true".
+            - Matches: []
+              Actions: ["drop"]
+    # static routes are routes that are known to the router but are 
+    # not advertised to neighbors via any protocol. static routes
+    # should take precedence over BGP routes for deciding what route
+    # the router should insert into the FIB.
+    StaticRoutes:
+      - Prefix: 70.4.194.0/24
+        Interface: r1@Eth0
+    Acls:
+      - Name: r1_outbound_host_permit
+        DefaultAction: Deny
+        Rules:
+          - Description: "allow srcip for host"
+            DstIp: 0.0.0.0/0
+            SrcIp: 70.4.194.0/24
+            Protocol: 0-255
+            DstPort: 0-65535
+            SrcPort: 0-65535
+            Action: Allow
+  - Name: r2
+    Interfaces:
+      - Name: r2@Eth1 
+        Neighbor: r1@Eth1
+        InAcl: null
+        OutAcl: null
+        InBgpPolicy: null
+        OutBgpPolicy: null
+      - Name: r2@Eth2
+        Neighbor: r4@Eth1
+        InAcl: null
+        OutAcl: null
+        InBgpPolicy: null
+        OutBgpPolicy: null
+    BgpConfig:
+      - AdvertisedRoutes: []
+      - InboundPolicies: []
+      - OutboundPolicies: []
+    StaticRoutes: []
+    Acls: []
+  - Name: r3
+    Interfaces:
+      - Name: r3@Eth1
+        Neighbor: r1@Eth2
+        InAcl: null
+        OutAcl: null
+        InBgpPolicy: null
+        OutBgpPolicy: null
+      - Name: r3@Eth2
+        Neighbor: r4@Eth2
+        InAcl: null
+        OutAcl: null
+        InBgpPolicy: null
+        OutBgpPolicy: r3_bgp_export_to_r4
+    BgpConfig:
+      - AdvertisedRoutes: []
+      - InboundPolicies: []
+      - OutboundPolicies:
+        # r3 removes tag 1 if it exists and always allows
+        - Name: "r3_bgp_export_to_r4"
+          PolicyClauses:
+            - Matches: ["tag: 1"]
+              Actions: ["remove tag 1"]
+            - Matches: []
+              Actions: ["allow"]
+    StaticRoutes: []
+    Acls: []
+  - Name: r4
+    Interfaces:
+      - Name: r4@Loopback0
+        Neighbor: null
+        InAcl: null
+        OutAcl: null
+        InBgpPolicy: null
+        OutBgpPolicy: null
+      - Name: r4@Eth3
+        Neighbor: null
+        InAcl: null
+        OutAcl: null
+        InBgpPolicy: null
+        OutBgpPolicy: null
+      - Name: r4@Eth1
+        Neighbor: r2@Eth2
+        InAcl: r4_inbound_deny
+        OutAcl: null
+        InBgpPolicy: r4_default_bgp_import
+        OutBgpPolicy: null
+      - Name: r4@Eth2 
+        Neighbor: r3@Eth2
+        InAcl: r4_inbound_deny
+        OutAcl: null
+        OutAcl: null
+        InBgpPolicy: r4_default_bgp_import
+    BgpConfig:
+      - AdvertisedRoutes: [70.4.193.0/24, 10.0.0.1/32]
+      - InboundPolicies: []
+      - OutboundPolicies:
+        # r4 allows its own routes out and allows routes with tag 1 attached
+        - Name: "r4_default_bgp_import"
+          PolicyClauses:
+            - Matches: ["prefix: 70.4.193.0/[24-24]"]
+              Actions: ["allow"]
+            - Matches: ["prefix: 10.0.0.1/[32-32]"]
+              Actions: ["allow"]
+            - Matches: ["tag: 1"]
+              Actions: ["remove tag 1", "allow"]
+            - Matches: []
+              Actions: ["drop"]
+    StaticRoutes:
+      - Prefix: 70.4.193.0/24
+        Interface: r4@Eth3
+      - Prefix: 10.0.0.1/32
+        Interface: r4@Loopback0
+    Acls:
+      - Name: r4_inbound_deny
+        DefaultAction: Deny
+        Rules:
+          - Description: "allow UDP traffic"
+            DstIp: 70.4.193.0/24
+            SrcIp: 0.0.0.0/0
+            Protocol: 17-17
+            DstPort: 0-65535
+            SrcPort: 0-65535
+            Action: Allow
+          - Description: "allow SSH over TCP traffic"
+            DstIp: 70.4.193.0/24
+            SrcIp: 0.0.0.0/0
+            Protocol: 6-6
+            DstPort: 22-22
+            SrcPort: 0-65535
+            Action: Allow
+          - Description: "allow traffic for loopback"
+            DstIp: 10.0.0.1/32
+            SrcIp: 0.0.0.0/0
+            Protocol: 0-255
+            DstPort: 0-65535
+            SrcPort: 0-65535
+            Action: Allow

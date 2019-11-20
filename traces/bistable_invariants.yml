@@ -1,0 +1,21 @@
+RoutingRules:
+  # there are multiple possible outcomes for r2, r3, check that you get at least one.
+  # each case corresponds to a possible stable state and what routing entries we expect.
+  - Case:
+    # checks that at device r2, there is a route for prefix 1.1.1.1/32 with next hop interface r2@Eth2
+    - Device: r2
+      Prefix: 1.1.1.1/32
+      Interfaces: [r2@Eth2]
+    # and... at r3 there is a route for prefix 1.1.1.1/32 with next hop interface r3@Eth2
+    - Device: r3
+      Prefix: 1.1.1.1/32
+      Interfaces: [r3@Eth2]
+  # there is a second case with a different message order that can produce these routes.
+  # the simulator should produce exactly one of these two cases.
+  - Case:
+    - Device: r2
+      Prefix: 1.1.1.1/32
+      Interfaces: [r2@Eth1]
+    - Device: r3
+      Prefix: 1.1.1.1/32
+      Interfaces: [r3@Eth1]
