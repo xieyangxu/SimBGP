@@ -31,22 +31,35 @@ interface_dict = {
     interface['Name']:interface
     for device in cp['Devices'] for interface in device['Interfaces']
 }
+out_policy_dict = {
+    policy['Name']:policy
+    for device in cp['Devices'] \
+        for policy in device['BgpConfig'][2]['OutboundPolicies']
+}
+in_policy_dict = {
+    policy['Name']:policy
+    for device in cp['Devices'] \
+        for policy in device['BgpConfig'][1]['InboundPolicies']
+}
 
-# BGP state data structure: rib, init with advertised routes
+# BGP state data structure: rib
 """rib stucture demo:
     r1:
       - Prefix: 1.1.1.1/32
         ASPath: [r2, r3]
+        Tag: {1, 7}
         Interface: Eth1
         LocalPref: 100
       # locally originated routes
       - Prefix: 10.0.0.1/32
         ASPath: []
-        Interface: None
+        Tag: {}
+        Interface: null
         LocalPref: 100
     r2:
       - Prefix: 1.1.1.1/32
         ASPath: [r3]
+        Tag: {1}
         Interface: Eth2
         LocalPref: 100
 """
@@ -60,7 +73,9 @@ for device in cp['Devices']:
     for prefix in device['BgpConfig'][0]['AdvertisedRoutes']:
         rib[device['Name']].append(rib_entry_init(prefix))
 
-print(rib)
+bgp_init(rib, cp, device_dict, in_policy_dict, out_policy_dict)
+
+iterate_rib(order=['r1'])
 
 
 
