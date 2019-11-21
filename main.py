@@ -12,7 +12,8 @@ ws_path = os.path.abspath(os.path.dirname(__file__))
 cp_path = os.path.join(ws_path, 'traces/'+trace+'_network.yml')
 with open(cp_path) as f:
     cp = yaml.load(f, Loader=yaml.SafeLoader)
-dp = copy.deepcopy(cp) # cp should be read-only, dp state are maintained seperately
+# cp should be read-only, dp state are maintained seperately
+dp = copy.deepcopy(cp)
 for device in dp['Devices']:
     device.pop('BgpConfig', None)
     device['ForwardingTable'] = copy.deepcopy(device['StaticRoutes'])
@@ -24,22 +25,22 @@ with open(iv_path) as f:
 
 # build name dict for devices and interfaces
 device_dict = {
-    device['Name']:device
+    device['Name']: device
     for device in cp['Devices']
 }
 interface_dict = {
-    interface['Name']:interface
+    interface['Name']: interface
     for device in cp['Devices'] for interface in device['Interfaces']
 }
 out_policy_dict = {
-    policy['Name']:policy
-    for device in cp['Devices'] \
-        for policy in device['BgpConfig'][2]['OutboundPolicies']
+    policy['Name']: policy
+    for device in cp['Devices']
+    for policy in device['BgpConfig'][2]['OutboundPolicies']
 }
 in_policy_dict = {
-    policy['Name']:policy
-    for device in cp['Devices'] \
-        for policy in device['BgpConfig'][1]['InboundPolicies']
+    policy['Name']: policy
+    for device in cp['Devices']
+    for policy in device['BgpConfig'][1]['InboundPolicies']
 }
 
 # BGP state data structure: rib
@@ -64,8 +65,8 @@ in_policy_dict = {
         LocalPref: 100
 """
 rib = {
-    device['Name']:[]
-    for device in cp['Devices'] 
+    device['Name']: []
+    for device in cp['Devices']
 }
 
 # init RIB with advertised routes
@@ -76,6 +77,3 @@ for device in cp['Devices']:
 bgp_init(rib, cp, device_dict, in_policy_dict, out_policy_dict)
 
 iterate_rib(order=['r1'])
-
-
-
