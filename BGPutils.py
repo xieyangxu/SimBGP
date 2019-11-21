@@ -89,6 +89,25 @@ def rib_entry_output(entry):
     pass
 
 
+def rib_policy_clauses(clauses, route_info):
+    message = []
+    for clause in clauses:
+        if rib_entry_matches(route_info, clause['Matches']):
+            res = rib_entry_actions(route_info, clause['Actions'])
+            if res == ALLOW:
+                rib_entry_output(route_info)
+                message.append(route_info)
+                break
+            elif res == PASS:
+                continue
+            elif res == DROP:
+                break
+            else:
+                raise Exception(
+                    f"Expected ALLOW, PASS, or DROP. Got {res}")
+    return message
+
+
 def bgp_in(device_name, route_infos):
     pass
 
@@ -107,20 +126,8 @@ def bgp_out(device_name):
             route_info = copy.deepcopy(entry)
             if interface['OutBgpPolicy'] != None:
                 out_policy = out_policy_dict[interface['OutBgpPolicy']]
-                for clause in out_policy['PolicyClauses']:
-                    if rib_entry_matches(route_info, clause['Matches']):
-                        res = rib_entry_actions(route_info, clause['Actions'])
-                        if res == ALLOW:
-                            rib_entry_output(route_info)
-                            message.append(route_info)
-                            break
-                        elif res == PASS:
-                            continue
-                        elif res == DROP:
-                            break
-                        else:
-                            raise Exception(
-                                f"Expected ALLOW, PASS, or DROP. Got {res}")
+                message += rib_policy_clauses(
+                    out_policy['PolicyClauses'], route_info)
 
         bgp_in(neighbor_device_name, message)
 
