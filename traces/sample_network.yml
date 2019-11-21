@@ -99,7 +99,7 @@ Devices:
         - Name: "r3_bgp_export_to_r4"
           PolicyClauses:
             - Matches: ["tag: 1"]
-              Actions: ["remove tag 1", "allow"]
+              Actions: ["remove tag 1"]
             - Matches: []
               Actions: ["allow"]
     StaticRoutes: []
