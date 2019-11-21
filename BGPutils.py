@@ -17,7 +17,7 @@ def rib_entry_init(prefix):
     return {
         'Prefix': prefix,
         'ASPath': [],
-        'Tag': {},
+        'Tag': set(),
         'Interface': None,
         'LocalPref': 100
     }
@@ -52,7 +52,6 @@ DROP = -1
 
 def rib_entry_action(entry, action):
     action_name, *action_args = action.split(" ")
-    print(action_name, action_args)
     if action_name == "allow":
         return ALLOW
     elif action_name == "drop":
@@ -69,6 +68,13 @@ def rib_entry_action(entry, action):
         else:
             raise Exception(f"Unexpected remove: {action_args}")
         return PASS
+    elif action_name == "set":
+        if action_args[0] == "localpref":
+            entry["LocalPref"] = int(action_args[1])
+        else:
+            raise Exception(f"Unexpected set: {action_args}")
+    else:
+        raise Exception(f"Unexpected action: {action_name} {action_args}")
 
 
 def rib_entry_actions(entry, actions):
