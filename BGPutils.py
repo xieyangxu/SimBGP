@@ -195,6 +195,7 @@ def check_duplicated_path(entry_new, entries):
 def rib_update(device_name, entry_new):
     """merge a new entry into device's RIB
     """
+    global updated
     # condition 1: routing loop, drop
     if device_name in entry_new['ASPath']:
         return
@@ -208,16 +209,19 @@ def rib_update(device_name, entry_new):
         preference_new = entry_new['LocalPref']
         if preference_new > preference_old:
             rib_d[prefix] = [entry_new]
+            update = True
             return
         elif preference_new == preference_old:
             if not check_duplicated_path(entry_new, rib_d[prefix]):
                 rib_d[prefix].append(entry_new)
+                updated = True
             return
         else:
             return  # drop due to low preference
 
     # Default, just insert
     rib_d[prefix] = [entry_new]
+    updated = True
 
 
 def bgp_in(interface_name, message):
@@ -264,7 +268,10 @@ def bgp_out(device_name):
         bgp_in(interface['Neighbor'], message)
 
 
-def bgp_iterate(order=[]):
-    for device in order:
-        bgp_out(device)
-    return
+def bgp_iterate(order):
+    global updated
+    updated = True
+    while (updated):
+        updated = False
+        for device in order:
+            bgp_out(device)

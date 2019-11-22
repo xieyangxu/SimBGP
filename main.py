@@ -6,6 +6,7 @@ from BGPutils import *
 from FTutils import *
 
 trace = 'sample'
+# trace = 'bistable'
 
 # load control plane and invariants from yaml file
 ws_path = os.path.abspath(os.path.dirname(__file__))
@@ -82,7 +83,7 @@ for device in cp['Devices']:
 
 bgp_init(rib, cp, device_dict, interface_dict, policy_dict)
 
-bgp_iterate(order=['r1', 'r2', 'r3', 'r4', 'r1', 'r2', 'r3', 'r4'])
+bgp_iterate([device['Name'] for device in cp['Devices']])
 print(rib)
 
 ft_build_from_rib(rib, dp, device_dict)
