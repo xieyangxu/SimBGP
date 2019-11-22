@@ -4,7 +4,7 @@ import copy
 
 from BGPutils import *
 
-trace = 'sample'
+trace = 'bistable'
 
 # load control plane and invariants from yaml file
 ws_path = os.path.abspath(os.path.dirname(__file__))
@@ -32,16 +32,12 @@ interface_dict = {
     interface['Name']: interface
     for device in cp['Devices'] for interface in device['Interfaces']
 }
-out_policy_dict = {
-    policy['Name']: policy
-    for device in cp['Devices']
-    for policy in device['BgpConfig'][2]['OutboundPolicies']
-}
-in_policy_dict = {
-    policy['Name']: policy
-    for device in cp['Devices']
-    for policy in device['BgpConfig'][1]['InboundPolicies']
-}
+policy_dict = {}
+for device in cp['Devices']:
+    for policy in device['BgpConfig'][1]['InboundPolicies']:
+        policy_dict[policy['Name']] = policy
+    for policy in device['BgpConfig'][2]['OutboundPolicies']:
+        policy_dict[policy['Name']] = policy
 
 # BGP state data structure: rib
 """rib stucture demo:
@@ -49,7 +45,7 @@ in_policy_dict = {
       - Prefix: 1.1.1.1/32
         ASPath: [r2, r3]
         Tag: {1, 7}
-        Interface: Eth1
+        Interface: r1@Eth1
         LocalPref: 100
       # locally originated routes
       - Prefix: 10.0.0.1/32
@@ -61,7 +57,7 @@ in_policy_dict = {
       - Prefix: 1.1.1.1/32
         ASPath: [r3]
         Tag: {1}
-        Interface: Eth2
+        Interface: r2@Eth2
         LocalPref: 100
 """
 rib = {
@@ -74,6 +70,7 @@ for device in cp['Devices']:
     for prefix in device['BgpConfig'][0]['AdvertisedRoutes']:
         rib[device['Name']].append(rib_entry_init(prefix))
 
-bgp_init(rib, cp, device_dict, in_policy_dict, out_policy_dict)
+bgp_init(rib, cp, device_dict, interface_dict, policy_dict)
 
-iterate_rib(order=['r1'])
+iterate_rib(order=['r1','r2','r3'])
+print(rib)
