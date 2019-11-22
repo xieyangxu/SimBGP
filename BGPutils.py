@@ -172,9 +172,8 @@ def bgp_in(interface_name, message):
             if res == DROP:
                 continue
         # avoid loop
-        for device in entry_new['ASPath']:
-            if device == device_name:
-                continue
+        if device_name in entry_new['ASPath']:
+            continue
         rib[device_name].append(entry_new)
 
 
