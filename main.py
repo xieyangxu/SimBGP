@@ -4,7 +4,7 @@ import copy
 
 from BGPutils import *
 
-trace = 'bistable'
+trace = 'sample'
 
 # load control plane and invariants from yaml file
 ws_path = os.path.abspath(os.path.dirname(__file__))
@@ -43,25 +43,31 @@ for device in cp['Devices']:
 """rib stucture demo:
     r1:
       1.1.1.1/32:
-        Prefix: 1.1.1.1/32:
-        ASPath: [r2, r3]
-        Tag: {1, 7}
-        Interface: r1@Eth1
-        LocalPref: 100
+        - Prefix: 1.1.1.1/32:
+          ASPath: [r2, r4]
+          Tag: {1, 7}
+          Interface: r1@Eth1
+          LocalPref: 100
       # locally originated routes
       10.0.0.1/32:
-        Prefix: 10.0.0.1/32:
-        ASPath: []
-        Tag: {}
-        Interface: null
-        LocalPref: 100
+        - Prefix: 10.0.0.1/32:
+          ASPath: []
+          Tag: {}
+          Interface: null
+          LocalPref: 100
     r2:
       1.1.1.1/32:
-        Prefix: 1.1.1.1/32:
-        ASPath: [r3]
-        Tag: {1}
-        Interface: r2@Eth2
-        LocalPref: 100
+        # multipath enabled
+        - Prefix: 1.1.1.1/32:
+          ASPath: [r4]
+          Tag: {1}
+          Interface: r2@Eth2
+          LocalPref: 200
+        - Prefix: 1.1.1.1/32:
+          ASPath: [r3, r4]
+          Tag: {}
+          Interface: r2@Eth3
+          LocalPref: 200
 """
 rib = {
     device['Name']: {}
@@ -71,9 +77,9 @@ rib = {
 # init RIB with advertised routes
 for device in cp['Devices']:
     for prefix in device['BgpConfig'][0]['AdvertisedRoutes']:
-        rib[device['Name']][prefix] = rib_entry_init(prefix)
+        rib[device['Name']][prefix] = [rib_entry_init(prefix)]
 
 bgp_init(rib, cp, device_dict, interface_dict, policy_dict)
 
-iterate_rib(order=['r1','r2','r3'])
+iterate_rib(order=['r1','r2','r3','r4','r1','r2','r3','r4'])
 print(rib)

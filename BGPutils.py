@@ -157,6 +157,7 @@ def apply_policy_on_rib_entry(clauses, entry):
         raise Exception("No ALLOW/DROP decision made")
     return res
 
+# useless in multipath setup
 def rib_entry_overwrite(entry_new, entry_old):
     """decide whether an exsiting entry should be overwritten based on 
         preference rules
@@ -177,24 +178,40 @@ def rib_entry_overwrite(entry_new, entry_old):
     else:
         return entry_new['LocalPref'] > entry_old['LocalPref']
 
+def check_duplicated_path(entry_new, entries):
+    path_new = entry_new['ASPath']
+    for entry in entries:
+        path = entry['ASPath']
+        if path_new == path: # check equivalence of list with == operator
+            return True
+    return False
+
 def rib_update(device_name, entry_new):
     """merge a new entry into device's RIB
     """
-    # Drop condition 1: routing loop
+    # condition 1: routing loop, drop
     if device_name in entry_new['ASPath']:
         return
     
     prefix = entry_new['Prefix']
     rib_d = rib[device_name]
 
-    # Drop condition 2: a better route exists
+    # condition 2: a route exists, merge
     if prefix in rib_d:
-        entry_old = rib_d[prefix]
-        if not rib_entry_overwrite(entry_new, entry_old):
+        preference_old = rib_d[prefix][0]['LocalPref']
+        preference_new = entry_new['LocalPref']
+        if preference_new > preference_old:
+            rib_d[prefix] = [entry_new]
+            return 
+        elif preference_new == preference_old:
+            if not check_duplicated_path(entry_new, rib_d[prefix]):
+                rib_d[prefix].append(entry_new)
             return
+        else:
+            return # drop due to low preference
     
-    # Overwrite
-    rib_d[prefix] = entry_new
+    # Default, just insert
+    rib_d[prefix] = [entry_new]
     
 
 
@@ -226,19 +243,20 @@ def bgp_out(device_name):
             continue
 
         message = []
-        for entry in rib[device_name].values():
-            # send bgp routing info message
-            entry_out = copy.deepcopy(entry)
-            if interface['OutBgpPolicy'] != None:
-                out_policy = policy_dict[interface['OutBgpPolicy']]
-                res = apply_policy_on_rib_entry(
-                    out_policy['PolicyClauses'], entry_out)
-                if res == DROP:
-                    continue
-            message.append(entry_out)
+        for prefix, entries in rib[device_name].items():
+            for entry in entries:
+                entry_out = copy.deepcopy(entry)
+                if interface['OutBgpPolicy'] != None:
+                    out_policy = policy_dict[interface['OutBgpPolicy']]
+                    res = apply_policy_on_rib_entry(
+                        out_policy['PolicyClauses'], entry_out)
+                    if res == DROP:
+                        continue
+                message.append(entry_out)
 
         for entry_out in message:
             rib_entry_to_message_entry(entry_out, device_name)
+        # trigger receiver's message-in function
         bgp_in(interface['Neighbor'], message)
 
 
