@@ -128,8 +128,8 @@ Devices:
         Neighbor: r3@Eth2
         InAcl: r4_inbound_deny
         OutAcl: null
-        OutAcl: null
         InBgpPolicy: r4_default_bgp_import
+        OutBgpPolicy: null      
     BgpConfig:
       - AdvertisedRoutes: [70.4.193.0/24, 10.0.0.1/32]
       - InboundPolicies: []
