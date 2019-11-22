@@ -3,6 +3,7 @@ import os.path
 import copy
 
 from BGPutils import *
+from FTutils import *
 
 trace = 'sample'
 
@@ -81,5 +82,12 @@ for device in cp['Devices']:
 
 bgp_init(rib, cp, device_dict, interface_dict, policy_dict)
 
-iterate_rib(order=['r1','r2','r3','r4','r1','r2','r3','r4'])
+bgp_iterate(order=['r1','r2','r3','r4','r1','r2','r3','r4'])
 print(rib)
+
+ft_build_from_rib(rib, dp, device_dict)
+
+# output is a dataplane file in ./traces/
+dp_path = os.path.join(ws_path, 'traces/'+trace+'_dataplane.yml')
+with open(dp_path, 'w') as f:
+    yaml.dump(dp, f)

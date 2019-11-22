@@ -260,7 +260,7 @@ def bgp_out(device_name):
         bgp_in(interface['Neighbor'], message)
 
 
-def iterate_rib(order=[]):
+def bgp_iterate(order=[]):
     for device in order:
         bgp_out(device)
     return
