@@ -6,7 +6,7 @@ import ipaddress
 
 
 def bgp_init(_rib, _cp, _device_dict, _interface_dict, _policy_dict):
-    
+
     global rib, cp
     global device_dict, interface_dict
     global policy_dict
@@ -45,11 +45,12 @@ def prefix_match(entry_prefix, match_prefix_range):
     match_ipa = ipaddress.ip_address(ip_prefix)
     match_prefixlen_lbound = int(low_range)
     match_prefixlen_ubound = int(high_range)
-    
+
     res = (int(entry_ipa) & mask) == (int(match_ipa) & mask)
     res &= entry_prefixlen >= match_prefixlen_lbound
     res &= entry_prefixlen <= match_prefixlen_ubound
     return res
+
 
 def rib_entry_match(entry, kind, arg):
     if kind == "prefix":
@@ -127,6 +128,7 @@ def rib_entry_to_message_entry(entry, device_name):
     entry.pop('LocalPref')
     entry['ASPath'].insert(0, device_name)
 
+
 def message_entry_to_rib_entry(entry, interface_name):
     entry['Interface'] = interface_name
     entry['LocalPref'] = 100
@@ -135,7 +137,7 @@ def message_entry_to_rib_entry(entry, interface_name):
 def apply_policy_on_rib_entry(clauses, entry):
     """apply a list of match-actions on an entry (RIB entry format)
         and make filter dicision
-        
+
         May modify the entry according to match-actions
         Returns:
             ALLOW or DROP
@@ -158,6 +160,8 @@ def apply_policy_on_rib_entry(clauses, entry):
     return res
 
 # useless in multipath setup
+
+
 def rib_entry_overwrite(entry_new, entry_old):
     """decide whether an exsiting entry should be overwritten based on 
         preference rules
@@ -170,7 +174,7 @@ def rib_entry_overwrite(entry_new, entry_old):
         # 2nd, prefer shorter AS path
         if len(entry_new['ASPath']) == len(entry_old['ASPath']):
             # 3rd, prefer lower next-hop id
-            if len(entry_new['ASPath']) == 0: # avoid out-of-bounds
+            if len(entry_new['ASPath']) == 0:  # avoid out-of-bounds
                 return False
             return entry_new['ASPath'][0] < entry_old['ASPath'][0]
         else:
@@ -178,13 +182,15 @@ def rib_entry_overwrite(entry_new, entry_old):
     else:
         return entry_new['LocalPref'] > entry_old['LocalPref']
 
+
 def check_duplicated_path(entry_new, entries):
     path_new = entry_new['ASPath']
     for entry in entries:
         path = entry['ASPath']
-        if path_new == path: # check equivalence of list with == operator
+        if path_new == path:  # check equivalence of list with == operator
             return True
     return False
+
 
 def rib_update(device_name, entry_new):
     """merge a new entry into device's RIB
@@ -192,7 +198,7 @@ def rib_update(device_name, entry_new):
     # condition 1: routing loop, drop
     if device_name in entry_new['ASPath']:
         return
-    
+
     prefix = entry_new['Prefix']
     rib_d = rib[device_name]
 
@@ -202,17 +208,16 @@ def rib_update(device_name, entry_new):
         preference_new = entry_new['LocalPref']
         if preference_new > preference_old:
             rib_d[prefix] = [entry_new]
-            return 
+            return
         elif preference_new == preference_old:
             if not check_duplicated_path(entry_new, rib_d[prefix]):
                 rib_d[prefix].append(entry_new)
             return
         else:
-            return # drop due to low preference
-    
+            return  # drop due to low preference
+
     # Default, just insert
     rib_d[prefix] = [entry_new]
-    
 
 
 def bgp_in(interface_name, message):
@@ -230,8 +235,7 @@ def bgp_in(interface_name, message):
                 continue
 
         rib_update(device_name, entry_new)
-        #rib[device_name].append(entry_new)
-
+        # rib[device_name].append(entry_new)
 
 
 def bgp_out(device_name):

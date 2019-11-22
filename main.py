@@ -82,7 +82,7 @@ for device in cp['Devices']:
 
 bgp_init(rib, cp, device_dict, interface_dict, policy_dict)
 
-bgp_iterate(order=['r1','r2','r3','r4','r1','r2','r3','r4'])
+bgp_iterate(order=['r1', 'r2', 'r3', 'r4', 'r1', 'r2', 'r3', 'r4'])
 print(rib)
 
 ft_build_from_rib(rib, dp, device_dict)

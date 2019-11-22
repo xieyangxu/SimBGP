@@ -7,6 +7,7 @@ def ft_entry_init(prefix=None, interface=None):
         'Interface': interface
     }
 
+
 def ft_build_from_rib(rib, dp, device_dict_cp):
     for device in dp['Devices']:
         device_name = device['Name']
@@ -15,7 +16,7 @@ def ft_build_from_rib(rib, dp, device_dict_cp):
         # init forwarding table
         device['ForwardingTable'] = []
         ft = device['ForwardingTable']
-        
+
         # translate static routes into fib entry
         for fi in device_dict_cp[device_name]['StaticRoutes']:
             ft.append(copy.deepcopy(fi))
@@ -24,7 +25,6 @@ def ft_build_from_rib(rib, dp, device_dict_cp):
             for entry in entries:
                 if len(entry['ASPath']) == 0:
                     # originated locally, added as static route
-                    continue 
+                    continue
                 # translate
                 ft.append(ft_entry_init(prefix, entry['Interface']))
-    
