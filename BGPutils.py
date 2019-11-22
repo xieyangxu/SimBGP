@@ -157,6 +157,46 @@ def apply_policy_on_rib_entry(clauses, entry):
         raise Exception("No ALLOW/DROP decision made")
     return res
 
+def rib_entry_overwrite(entry_new, entry_old):
+    """decide whether an exsiting entry should be overwritten based on 
+        preference rules
+
+        Returns:
+            true, if new entry should overwrite
+    """
+    # 1st, prefer higher local preference
+    if entry_new['LocalPref'] == entry_old['LocalPref']:
+        # 2nd, prefer shorter AS path
+        if len(entry_new['ASPath']) == len(entry_old['ASPath']):
+            # 3rd, prefer lower next-hop id
+            if len(entry_new['ASPath']) == 0: # avoid out-of-bounds
+                return False
+            return entry_new['ASPath'][0] < entry_old['ASPath'][0]
+        else:
+            return len(entry_new['ASPath']) < len(entry_old['ASPath'])
+    else:
+        return entry_new['LocalPref'] > entry_old['LocalPref']
+
+def rib_update(device_name, entry_new):
+    """merge a new entry into device's RIB
+    """
+    # Drop condition 1: routing loop
+    if device_name in entry_new['ASPath']:
+        return
+    
+    prefix = entry_new['Prefix']
+    rib_d = rib[device_name]
+
+    # Drop condition 2: a better route exists
+    if prefix in rib_d:
+        entry_old = rib_d[prefix]
+        if not rib_entry_overwrite(entry_new, entry_old):
+            return
+    
+    # Overwrite
+    rib_d[prefix] = entry_new
+    
+
 
 def bgp_in(interface_name, message):
     device_name = interface_name.split('@')[0]
@@ -171,10 +211,9 @@ def bgp_in(interface_name, message):
                 in_policy['PolicyClauses'], entry_new)
             if res == DROP:
                 continue
-        # avoid loop
-        if device_name in entry_new['ASPath']:
-            continue
-        rib[device_name].append(entry_new)
+
+        rib_update(device_name, entry_new)
+        #rib[device_name].append(entry_new)
 
 
 
@@ -187,7 +226,7 @@ def bgp_out(device_name):
             continue
 
         message = []
-        for entry in rib[device_name]:
+        for entry in rib[device_name].values():
             # send bgp routing info message
             entry_out = copy.deepcopy(entry)
             if interface['OutBgpPolicy'] != None:
