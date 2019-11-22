@@ -123,13 +123,13 @@ Devices:
         InAcl: r4_inbound_deny
         OutAcl: null
         InBgpPolicy: r4_default_bgp_import
-        OutBgpPolicy: null
+        OutBgpPolicy: r4_default_bgp_import
       - Name: r4@Eth2 
         Neighbor: r3@Eth2
         InAcl: r4_inbound_deny
         OutAcl: null
         InBgpPolicy: r4_default_bgp_import
-        OutBgpPolicy: null      
+        OutBgpPolicy: r4_default_bgp_import   
     BgpConfig:
       - AdvertisedRoutes: [70.4.193.0/24, 10.0.0.1/32]
       - InboundPolicies: []
