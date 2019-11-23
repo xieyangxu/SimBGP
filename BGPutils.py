@@ -64,10 +64,7 @@ def rib_entry_match(entry, kind, arg):
 
 
 def rib_entry_matches(entry, matches):
-    output = True
-    for match in matches:
-        output = output and rib_entry_match(entry, *match.split(": ", 1))
-    return output
+    return all(rib_entry_match(entry, *match.split(": ", 1)) for match in matches)
 
 
 ALLOW = 1
@@ -185,11 +182,7 @@ def rib_entry_overwrite(entry_new, entry_old):
 
 def check_duplicated_path(entry_new, entries):
     path_new = entry_new['ASPath']
-    for entry in entries:
-        path = entry['ASPath']
-        if path_new == path:  # check equivalence of list with == operator
-            return True
-    return False
+    return any(path_new == entry['ASPath'] for entry in entries)
 
 
 def rib_update(device_name, entry_new):
