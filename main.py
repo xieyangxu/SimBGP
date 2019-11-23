@@ -2,13 +2,14 @@ import yaml
 import os.path
 import copy
 import argparse
+from tryAP.main import main
 
 from BGPutils import *
 from FTutils import *
 
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('-d', '--dir', metavar='d', nargs=1, default=os.path.abspath(
-    os.path.dirname(__file__)), help='directory to look for traces folder')
+parser.add_argument('-d', '--dir', metavar='d', nargs=1, default=[str(os.path.abspath(
+    os.path.dirname(__file__)))], help='directory to look for traces folder')
 parser.add_argument('trace', metavar='t', type=str, nargs=1,
                     help='trace name. try `sample` or `bistable`')
 
@@ -16,7 +17,7 @@ args = parser.parse_args()
 trace = args.trace[0]
 
 # load control plane and invariants from yaml file
-ws_path = os.path.abspath(args.dir)
+ws_path = os.path.abspath(args.dir[0])
 
 cp_path = os.path.join(ws_path, 'traces/network/'+trace+'_network.yml')
 with open(cp_path) as f:
@@ -91,7 +92,7 @@ for device in cp['Devices']:
 bgp_init(rib, cp, device_dict, interface_dict, policy_dict)
 
 bgp_iterate([device['Name'] for device in cp['Devices']])
-print(rib)
+# print(rib)
 
 ft_build_from_rib(rib, dp, device_dict)
 
@@ -116,3 +117,26 @@ if 'Reachability' in iv:
     qu_path = os.path.join(ws_path, 'traces/query/'+trace+'_query.yml')
     with open(qu_path, 'w') as f:
         yaml.dump(qu, f)
+
+    # call tryAP with dataplane query
+    main(trace, ws_path)
+
+
+def check_case(case):
+    for check in case['Case']:
+        routing_rules = rib[check['Device']]
+        prefix_rules = routing_rules[check['Prefix']]
+        interfaces = check['Interfaces']
+        if not all((rule['Interface'] in interfaces) for rule in prefix_rules):
+            return False
+    return True
+
+
+def check_routing_rule(rr):
+    return any(check_case(case) for case in rr)
+
+
+rr = iv['RoutingRules']
+print("Routing Rules:")
+for case in rr:
+    print(check_case(case))
