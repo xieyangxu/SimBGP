@@ -1,12 +1,17 @@
 import yaml
 import os.path
 import copy
+import argparse
 
 from BGPutils import *
 from FTutils import *
 
-trace = 'sample'
-# trace = 'bistable'
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('trace', metavar='t', type=str, nargs=1,
+                    help='trace name. try `sample` or `bistable`')
+
+args = parser.parse_args()
+trace = args.trace[0]
 
 # load control plane and invariants from yaml file
 ws_path = os.path.abspath(os.path.dirname(__file__))
