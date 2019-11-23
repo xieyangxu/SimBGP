@@ -17,6 +17,6 @@ Run `python3 main.py <trace name>` where <trace name> is either `sample` or `bis
 
 `FTUtils.py` converts RIBs to forwarding tables to generate the data plane.
 
-`BGPUtils.py` contains the BGP simulation logic.
+`BGPUtils.py` contains the BGP simulation logic. `bgp_iterate` updates each node in the graph until the control plane no longer updates.
 
 `main.py` processes command line args and yaml files, runs the BGP simulator, calls tryAP, and processes the routing rules.
