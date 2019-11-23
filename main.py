@@ -96,6 +96,10 @@ print(rib)
 ft_build_from_rib(rib, dp, device_dict)
 
 # output dataplane file in ./traces/dataplane/
+dp_dir = os.path.join(ws_path, 'traces/dataplane/')
+if not os.path.exists(dp_dir):
+    os.makedirs(dp_dir)
+
 dp_path = os.path.join(ws_path, 'traces/dataplane/'+trace+'_dataplane.yml')
 with open(dp_path, 'w') as f:
     yaml.dump(dp, f)
@@ -104,6 +108,10 @@ with open(dp_path, 'w') as f:
 # run dataplane verification
 if 'Reachability' in iv:
     qu = iv['Reachability']
+
+    qu_dir = os.path.join(ws_path, 'traces/query/')
+    if not os.path.exists(qu_dir):
+        os.makedirs(qu_dir)
 
     qu_path = os.path.join(ws_path, 'traces/query/'+trace+'_query.yml')
     with open(qu_path, 'w') as f:
