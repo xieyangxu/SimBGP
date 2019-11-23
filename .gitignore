@@ -124,5 +124,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# generated dataplane file
+# generated dataplane and query files
 *_dataplane.yml
+*_query.yml

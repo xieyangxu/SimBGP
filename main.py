@@ -7,6 +7,8 @@ from BGPutils import *
 from FTutils import *
 
 parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('-d', '--dir', metavar='d', nargs=1, default=os.path.abspath(
+    os.path.dirname(__file__)), help='directory to look for traces folder')
 parser.add_argument('trace', metavar='t', type=str, nargs=1,
                     help='trace name. try `sample` or `bistable`')
 
@@ -14,9 +16,9 @@ args = parser.parse_args()
 trace = args.trace[0]
 
 # load control plane and invariants from yaml file
-ws_path = os.path.abspath(os.path.dirname(__file__))
+ws_path = os.path.abspath(args.dir)
 
-cp_path = os.path.join(ws_path, 'traces/'+trace+'_network.yml')
+cp_path = os.path.join(ws_path, 'traces/network/'+trace+'_network.yml')
 with open(cp_path) as f:
     cp = yaml.load(f, Loader=yaml.SafeLoader)
 # cp should be read-only, dp state are maintained seperately
@@ -26,7 +28,7 @@ for device in dp['Devices']:
     device['ForwardingTable'] = copy.deepcopy(device['StaticRoutes'])
     device.pop('StaticRoutes', None)
 
-iv_path = os.path.join(ws_path, 'traces/'+trace+'_invariants.yml')
+iv_path = os.path.join(ws_path, 'traces/invariants/'+trace+'_invariants.yml')
 with open(iv_path) as f:
     iv = yaml.load(f, Loader=yaml.SafeLoader)
 
@@ -93,7 +95,16 @@ print(rib)
 
 ft_build_from_rib(rib, dp, device_dict)
 
-# output is a dataplane file in ./traces/
-dp_path = os.path.join(ws_path, 'traces/'+trace+'_dataplane.yml')
+# output dataplane file in ./traces/dataplane/
+dp_path = os.path.join(ws_path, 'traces/dataplane/'+trace+'_dataplane.yml')
 with open(dp_path, 'w') as f:
     yaml.dump(dp, f)
+
+# output reachability query file in ./traces/query/
+# run dataplane verification
+if 'Reachability' in iv:
+    qu = iv['Reachability']
+
+    qu_path = os.path.join(ws_path, 'traces/query/'+trace+'_query.yml')
+    with open(qu_path, 'w') as f:
+        yaml.dump(qu, f)
