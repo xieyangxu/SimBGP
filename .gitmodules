@@ -1,0 +1,3 @@
+[submodule "tryAP"]
+	path = tryAP
+	url = https://github.com/Ashlippers/tryAP
