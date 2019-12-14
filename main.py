@@ -138,7 +138,10 @@ def cp_failure_reasoning(query):
         - ['r1@Eth1', 'r2@Eth1']
           ['r2@Eth2', 'r4@Eth1']
     """
-    failures = list(combinations(links, max_failure))
+    failures = []
+    # build all failure cases under a maximum ammount
+    for i in range(max_failure + 1):
+        failures = list(combinations(links, i)) + failures
 
     res = True
     for failure_case in failures:
