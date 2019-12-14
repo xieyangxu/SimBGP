@@ -25,16 +25,19 @@ cp_path = os.path.join(ws_path, 'traces/network/'+trace+'_network.yml')
 # load control plane and invariants from yaml file
 #ws_path = os.path.abspath(args.dir[0])
 
+
 def cp_init(cp):
     for device in cp['Devices']:
         for interface in device['Interfaces']:
             interface['FailFlag'] = False
+
 
 def cp_load(cp_path):
     with open(cp_path) as f:
         cp = yaml.load(f, Loader=yaml.SafeLoader)
     cp_init(cp)
     return cp
+
 
 def dp_init(cp):
     # cp should be read-only, dp state are maintained seperately
@@ -44,6 +47,7 @@ def dp_init(cp):
         device['ForwardingTable'] = copy.deepcopy(device['StaticRoutes'])
         device.pop('StaticRoutes', None)
     return dp
+
 
 def rib_init(cp):
     # BGP state data structure: rib
@@ -87,6 +91,7 @@ def rib_init(cp):
             rib[device['Name']][prefix] = [rib_entry_init(prefix)]
     return rib
 
+
 def cp_check(cp, query, device_dict, interface_dict, policy_dict):
     rib = rib_init(cp)
 
@@ -100,10 +105,11 @@ def cp_check(cp, query, device_dict, interface_dict, policy_dict):
 
     return dp_check(dp, query)
 
+
 def cp_failure_reasoning(query):
 
     cp = cp_load(cp_path)
-    
+
     # build name dict for devices and interfaces
     device_dict = {
         device['Name']: device
@@ -119,7 +125,7 @@ def cp_failure_reasoning(query):
             policy_dict[policy['Name']] = policy
         for policy in device['BgpConfig']['OutboundPolicies']:
             policy_dict[policy['Name']] = policy
-    
+
     # build links list
     links = []
     linked_set = set()
@@ -128,7 +134,6 @@ def cp_failure_reasoning(query):
             if interface['Neighbor'] not in linked_set:
                 links.append([interface_name, interface['Neighbor']])
                 linked_set.add(interface_name)
-
 
     max_failure = query['MaxFailures']
 
@@ -145,7 +150,7 @@ def cp_failure_reasoning(query):
 
     res = True
     for failure_case in failures:
-        cp_init(cp) # clear all flags
+        cp_init(cp)  # clear all flags
         for failed_link in failure_case:
             for end_node in failed_link:
                 interface_dict[end_node]['FailFlag'] = True
@@ -157,16 +162,13 @@ def cp_failure_reasoning(query):
     print(res)
 
 
-    
-
 if __name__ == "__main__":
-    
 
-    iv_path = os.path.join(ws_path, 'traces/invariants/'+trace+'_invariants.yml')
+    iv_path = os.path.join(
+        ws_path, 'traces/invariants/'+trace+'_invariants.yml')
     with open(iv_path) as f:
         iv = yaml.load(f, Loader=yaml.SafeLoader)
 
     qu = iv['Reachability']
     for query in qu:
         cp_failure_reasoning(query)
-
