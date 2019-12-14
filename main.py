@@ -128,12 +128,14 @@ def cp_failure_reasoning(query):
 
     # build links list
     links = []
-    linked_set = set()
+    exclude_set = set()
+    exclude_set.add(query['Ingress'][0]) # exclude ingress interface failures
+    exclude_set.add(query['Egress'][0]) # exclude egress interface failures
     for interface_name, interface in interface_dict.items():
         if interface['Neighbor'] is not None:
-            if interface['Neighbor'] not in linked_set:
+            if interface['Neighbor'] not in exclude_set and interface_name not in exclude_set:
                 links.append([interface_name, interface['Neighbor']])
-                linked_set.add(interface_name)
+                exclude_set.add(interface_name)
 
     max_failure = query['MaxFailures']
 
