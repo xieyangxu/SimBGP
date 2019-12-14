@@ -44,9 +44,9 @@ interface_dict = {
 }
 policy_dict = {}
 for device in cp['Devices']:
-    for policy in device['BgpConfig'][1]['InboundPolicies']:
+    for policy in device['BgpConfig']['InboundPolicies']:
         policy_dict[policy['Name']] = policy
-    for policy in device['BgpConfig'][2]['OutboundPolicies']:
+    for policy in device['BgpConfig']['OutboundPolicies']:
         policy_dict[policy['Name']] = policy
 
 # BGP state data structure: rib
@@ -86,7 +86,7 @@ rib = {
 
 # init RIB with advertised routes
 for device in cp['Devices']:
-    for prefix in device['BgpConfig'][0]['AdvertisedRoutes']:
+    for prefix in device['BgpConfig']['AdvertisedRoutes']:
         rib[device['Name']][prefix] = [rib_entry_init(prefix)]
 
 bgp_init(rib, cp, device_dict, interface_dict, policy_dict)
@@ -122,21 +122,21 @@ if 'Reachability' in iv:
     main(trace, ws_path)
 
 
-def check_case(case):
-    for check in case['Case']:
-        routing_rules = rib[check['Device']]
-        prefix_rules = routing_rules[check['Prefix']]
-        interfaces = check['Interfaces']
-        if not all((rule['Interface'] in interfaces) for rule in prefix_rules):
-            return False
-    return True
+# def check_case(case):
+#     for check in case['Case']:
+#         routing_rules = rib[check['Device']]
+#         prefix_rules = routing_rules[check['Prefix']]
+#         interfaces = check['Interfaces']
+#         if not all((rule['Interface'] in interfaces) for rule in prefix_rules):
+#             return False
+#     return True
 
 
-def check_routing_rule(rr):
-    return any(check_case(case) for case in rr)
+# def check_routing_rule(rr):
+#     return any(check_case(case) for case in rr)
 
 
-rr = iv['RoutingRules']
-print("Routing Rules:")
-for case in rr:
-    print(check_case(case))
+# rr = iv['RoutingRules']
+# print("Routing Rules:")
+# for case in rr:
+#     print(check_case(case))

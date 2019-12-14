@@ -21,9 +21,9 @@ Devices:
         InBgpPolicy: null
         OutBgpPolicy: r1_default_bgp_export
     BgpConfig:
-      - AdvertisedRoutes: [70.4.194.0/24]
-      - InboundPolicies: []
-      - OutboundPolicies:
+      AdvertisedRoutes: [70.4.194.0/24]
+      InboundPolicies: []
+      OutboundPolicies:
         # BGP policies are lists of clauses that each have one or more
         # match expressions and one or more actions.
         - Name: "r1_default_bgp_export"
@@ -72,9 +72,9 @@ Devices:
         InBgpPolicy: null
         OutBgpPolicy: null
     BgpConfig:
-      - AdvertisedRoutes: []
-      - InboundPolicies: []
-      - OutboundPolicies: []
+      AdvertisedRoutes: []
+      InboundPolicies: []
+      OutboundPolicies: []
     StaticRoutes: []
     Acls: []
   - Name: r3
@@ -92,16 +92,16 @@ Devices:
         InBgpPolicy: null
         OutBgpPolicy: r3_bgp_export_to_r4
     BgpConfig:
-      - AdvertisedRoutes: []
-      - InboundPolicies: []
-      - OutboundPolicies:
+      AdvertisedRoutes: []
+      InboundPolicies: []
+      OutboundPolicies:
         # r3 removes tag 1 if it exists and always allows
         - Name: "r3_bgp_export_to_r4"
           PolicyClauses:
             - Matches: ["tag: 1"]
-              Actions: ["remove tag 1"]
-            - Matches: []
               Actions: ["allow"]
+            - Matches: []
+              Actions: ['drop']
     StaticRoutes: []
     Acls: []
   - Name: r4
@@ -123,17 +123,17 @@ Devices:
         InAcl: r4_inbound_deny
         OutAcl: null
         InBgpPolicy: r4_default_bgp_import
-        OutBgpPolicy: r4_default_bgp_import
+        OutBgpPolicy: null
       - Name: r4@Eth2 
         Neighbor: r3@Eth2
         InAcl: r4_inbound_deny
         OutAcl: null
         InBgpPolicy: r4_default_bgp_import
-        OutBgpPolicy: r4_default_bgp_import   
+        OutBgpPolicy: null
     BgpConfig:
-      - AdvertisedRoutes: [70.4.193.0/24, 10.0.0.1/32]
-      - InboundPolicies: []
-      - OutboundPolicies:
+      AdvertisedRoutes: [70.4.193.0/24, 10.0.0.1/32]
+      OutboundPolicies: []
+      InboundPolicies:
         # r4 allows its own routes out and allows routes with tag 1 attached
         - Name: "r4_default_bgp_import"
           PolicyClauses:

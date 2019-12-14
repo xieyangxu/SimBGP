@@ -1,46 +1,4 @@
-RoutingRules:
-  # there is one stable state, check that the following routes exist and have
-  # the exact set of expected interfaces
-  - Case:
-    # r1 should have a route for 70.4.193.0/24 that is multipath routed along two next hop interfaces.
-    - Device: r1
-      Prefix: 70.4.193.0/24
-      Interfaces: [r1@Eth1, r1@Eth2]
-    - Device: r1
-      Prefix: 10.0.0.1/32
-      Interfaces: [r1@Eth1, r1@Eth2]
-    - Device: r2
-      Prefix: 70.4.193.0/24
-      Interfaces: [r2@Eth2]
-    - Device: r2
-      Prefix: 10.0.0.1/32
-      Interfaces: [r2@Eth2]
-    - Device: r2
-      Prefix: 70.4.194.0/24
-      Interfaces: [r2@Eth1]
-    - Device: r3
-      Prefix: 70.4.193.0/24
-      Interfaces: [r3@Eth2]
-    - Device: r3
-      Prefix: 10.0.0.1/32
-      Interfaces: [r3@Eth2]
-    - Device: r3
-      Prefix: 70.4.194.0/24
-      Interfaces: [r3@Eth1]
-    # note: route is dropped along one path, so only get one next hop
-    - Device: r4
-      Prefix: 70.4.194.0/24
-      Interfaces: [r4@Eth1]
-# If you want, you can check if the same reachability invariants hold...
 Reachability:
-  # traffic to loopback should not be reachable in general
-  - Ingress: [r1@Eth0]
-    Egress: [r4@Loopback0]
-    DstIp: [10.0.0.1/32]
-    SrcIp: [0.0.0.0/0]
-    Protocol: [0-255]
-    DstPort: [0-65535]
-    SrcPort: [0-65535]
   # traffic to loopback should be reachable in from the right source
   - Ingress: [r1@Eth0]
     Egress: [r4@Loopback0]
@@ -49,6 +7,10 @@ Reachability:
     Protocol: [0-255]
     DstPort: [0-65535]
     SrcPort: [0-65535]
+    # check reachability for any single failure. the set of 
+    # possible failures should exclude the ingress and egress
+    # interfaces, since that makes the query trivially false.
+    MaxFailures: 1
   # traffic between hosts should not be reachable in general
   - Ingress: [r1@Eth0]
     Egress: [r4@Eth3]
@@ -57,6 +19,7 @@ Reachability:
     Protocol: [0-255]
     DstPort: [0-65535]
     SrcPort: [0-65535]
+    MaxFailures: 0
   # traffic between hosts should not be reachable for TCP SSH traffic if from the wrong source
   - Ingress: [r1@Eth0]
     Egress: [r4@Eth3]
@@ -65,6 +28,7 @@ Reachability:
     Protocol: [6-6]
     DstPort: [22-22]
     SrcPort: [0-65535]
+    MaxFailures: 0
   # traffic between hosts should be reachable for TCP SSH traffic from the right source
   - Ingress: [r1@Eth0]
     Egress: [r4@Eth3]
@@ -73,6 +37,7 @@ Reachability:
     Protocol: [6-6]
     DstPort: [22-22]
     SrcPort: [0-65535]
+    MaxFailures: 1
   # splitting a prefix should not affect reachability
   - Ingress: [r1@Eth0]
     Egress: [r4@Eth3]
@@ -81,7 +46,8 @@ Reachability:
     Protocol: [6-6]
     DstPort: [22-22]
     SrcPort: [0-65535]
-  # traffic between hosts should be reachable for UDP
+    MaxFailures: 1
+  # traffic between hosts should be reachable for UDP, but not when 2 failures are allowed
   - Ingress: [r1@Eth0]
     Egress: [r4@Eth3]
     DstIp: [70.4.193.0/24]
@@ -89,3 +55,4 @@ Reachability:
     Protocol: [17-17]
     DstPort: [0-65535]
     SrcPort: [0-65535]
+    MaxFailures: 2
