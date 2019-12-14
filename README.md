@@ -15,6 +15,11 @@ State-of-the-art approaches use techniques from areas like abstract interpretati
 learning, and constraint solving to more quickly find link failures that lead to invariant
 violations. Those tools exploit domain-specific knowledge to prune, simplify, and guide search.
 
+In more detail, SimBGP handles link failures by adding an `FailFlag` field to the internal
+representation of interfaces. If this flag is `True` then the interface (and thus its corresponding
+link) is considered down and the simulator ignores that interface. Combinations of down links are
+enumerated with the help of the `itertools.combinations` function.
+
 ## Installation and Usage
 Depencencies: Python 3.7, pyyaml 5.1.2, pyeda 0.28.0
 
