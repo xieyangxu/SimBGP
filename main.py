@@ -130,7 +130,7 @@ def cp_failure_reasoning(query):
     links = []
     linked_set = set()
     for interface_name, interface in interface_dict.items():
-        if interface['Neighbor'] != None:
+        if interface['Neighbor'] is not None:
             if interface['Neighbor'] not in linked_set:
                 links.append([interface_name, interface['Neighbor']])
                 linked_set.add(interface_name)
@@ -156,7 +156,7 @@ def cp_failure_reasoning(query):
                 interface_dict[end_node]['FailFlag'] = True
 
         res &= cp_check(cp, query, device_dict, interface_dict, policy_dict)
-        if res == False:
+        if not res:
             break
 
     print(res)
