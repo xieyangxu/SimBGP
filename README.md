@@ -55,4 +55,4 @@ and places them in the `dataplane` and `query` subdirectories, respectively.
 
 `BGPUtils.py` contains the BGP simulation logic. `bgp_iterate` updates each node in the graph until the control plane no longer updates.
 
-`main.py` processes command line args and yaml files, runs the BGP simulator, calls tryAP, and processes the routing rules.
+`main.py` processes command line args and yaml files, `cp_failure_reasoning` checks a reachability query with maximum failures by emumerate all failure cases and check each of them with underlying `cp_check`. `cp_check` runs the BGP simulator to build up a dataplane of its converged state, and calls tryAP to check reachability in dataplane.
