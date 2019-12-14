@@ -239,6 +239,8 @@ def bgp_out(device_name):
     for interface in device_dict[device_name]['Interfaces']:
         if interface['Neighbor'] == None:
             continue
+        if interface['FailFlag'] == True:
+            continue
         neighbor_device_name = interface['Neighbor'].split('@')[0]
         if neighbor_device_name == device_name:
             continue
