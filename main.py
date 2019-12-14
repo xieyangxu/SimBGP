@@ -2,22 +2,24 @@ import yaml
 import os.path
 import copy
 import argparse
-from tryAP.main import main
+from tryAP.main import dp_check
 
 from BGPutils import *
 from FTutils import *
 
-parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('-d', '--dir', metavar='d', nargs=1, default=[str(os.path.abspath(
-    os.path.dirname(__file__)))], help='directory to look for traces folder')
-parser.add_argument('trace', metavar='t', type=str, nargs=1,
-                    help='trace name. try `sample` or `bistable`')
+# parser = argparse.ArgumentParser(description='Process some integers.')
+# parser.add_argument('-d', '--dir', metavar='d', nargs=1, default=[str(os.path.abspath(
+#     os.path.dirname(__file__)))], help='directory to look for traces folder')
+# parser.add_argument('trace', metavar='t', type=str, nargs=1,
+#                     help='trace name. try `sample` or `bistable`')
 
-args = parser.parse_args()
-trace = args.trace[0]
+# args = parser.parse_args()
+# trace = args.trace[0]
+trace = 'netv'
 
 # load control plane and invariants from yaml file
-ws_path = os.path.abspath(args.dir[0])
+#ws_path = os.path.abspath(args.dir[0])
+ws_path = os.path.abspath(os.path.dirname(__file__))
 
 cp_path = os.path.join(ws_path, 'traces/network/'+trace+'_network.yml')
 with open(cp_path) as f:
@@ -96,30 +98,35 @@ bgp_iterate([device['Name'] for device in cp['Devices']])
 
 ft_build_from_rib(rib, dp, device_dict)
 
-# output dataplane file in ./traces/dataplane/
-dp_dir = os.path.join(ws_path, 'traces/dataplane/')
-if not os.path.exists(dp_dir):
-    os.makedirs(dp_dir)
 
-dp_path = os.path.join(ws_path, 'traces/dataplane/'+trace+'_dataplane.yml')
-with open(dp_path, 'w') as f:
-    yaml.dump(dp, f)
+qu = iv['Reachability']
+for query in qu:
+    print(dp_check(dp, query))
 
-# output reachability query file in ./traces/query/
-# run dataplane verification
-if 'Reachability' in iv:
-    qu = iv['Reachability']
+# # output dataplane file in ./traces/dataplane/
+# dp_dir = os.path.join(ws_path, 'traces/dataplane/')
+# if not os.path.exists(dp_dir):
+#     os.makedirs(dp_dir)
 
-    qu_dir = os.path.join(ws_path, 'traces/query/')
-    if not os.path.exists(qu_dir):
-        os.makedirs(qu_dir)
+# dp_path = os.path.join(ws_path, 'traces/dataplane/'+trace+'_dataplane.yml')
+# with open(dp_path, 'w') as f:
+#     yaml.dump(dp, f)
 
-    qu_path = os.path.join(ws_path, 'traces/query/'+trace+'_query.yml')
-    with open(qu_path, 'w') as f:
-        yaml.dump(qu, f)
+# # output reachability query file in ./traces/query/
+# # run dataplane verification
+# if 'Reachability' in iv:
+#     qu = iv['Reachability']
 
-    # call tryAP with dataplane query
-    main(trace, ws_path)
+#     qu_dir = os.path.join(ws_path, 'traces/query/')
+#     if not os.path.exists(qu_dir):
+#         os.makedirs(qu_dir)
+
+#     qu_path = os.path.join(ws_path, 'traces/query/'+trace+'_query.yml')
+#     with open(qu_path, 'w') as f:
+#         yaml.dump(qu, f)
+
+#     # call tryAP with dataplane query
+#     main(trace, ws_path)
 
 
 # def check_case(case):
