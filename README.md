@@ -16,24 +16,22 @@ learning, and constraint solving to more quickly find link failures that lead to
 violations. Those tools exploit domain-specific knowledge to prune, simplify, and guide search.
 
 ## Installation and Usage
-Python 3.7, pyyaml 5.1.2, pyeda 0.28.0
+Depencencies: Python 3.7, pyyaml 5.1.2, pyeda 0.28.0
 
 1. Install dependencies
 
    Make sure python version is 3.7
-
-   Use ./Pipfile for pipenv
-
-   or
 
    `pip3 install pyyaml`
 
    `pip3 install pyeda`
 
 2. Clone project
+
    `git clone --recursive https://github.com/Ashlippers/SimBGP.git`
 
 3. Checkout to failure reasoning branch
+
    `git checkout failure_reasoning`
 
 4. Run sample trace
