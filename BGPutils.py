@@ -56,7 +56,7 @@ def rib_entry_match(entry, kind, arg):
     if kind == "prefix":
         return prefix_match(entry['Prefix'], arg)
     elif kind == "neighbor":
-        return not len(entry["ASPath"]) == 0 and entry["ASPath"][0] == arg
+        return entry["ASPath"] and entry["ASPath"][0] == arg
     elif kind == "tag":
         return arg in entry["Tag"]
     else:
@@ -171,7 +171,7 @@ def rib_entry_overwrite(entry_new, entry_old):
         # 2nd, prefer shorter AS path
         if len(entry_new['ASPath']) == len(entry_old['ASPath']):
             # 3rd, prefer lower next-hop id
-            if len(entry_new['ASPath']) == 0:  # avoid out-of-bounds
+            if not entry_new['ASPath']:  # avoid out-of-bounds
                 return False
             return entry_new['ASPath'][0] < entry_old['ASPath'][0]
         else:
@@ -224,7 +224,7 @@ def bgp_in(interface_name, message):
     for entry_in in message:
         entry_new = copy.deepcopy(entry_in)
         message_entry_to_rib_entry(entry_new, interface_name)
-        if interface['InBgpPolicy'] != None:
+        if interface['InBgpPolicy'] is not None:
             in_policy = policy_dict[interface['InBgpPolicy']]
             res = apply_policy_on_rib_entry(
                 in_policy['PolicyClauses'], entry_new)
@@ -237,9 +237,9 @@ def bgp_in(interface_name, message):
 
 def bgp_out(device_name):
     for interface in device_dict[device_name]['Interfaces']:
-        if interface['Neighbor'] == None:
+        if interface['Neighbor'] is None:
             continue
-        if interface['FailFlag'] == True:
+        if interface['FailFlag']:
             continue
         neighbor_device_name = interface['Neighbor'].split('@')[0]
         if neighbor_device_name == device_name:
@@ -249,7 +249,7 @@ def bgp_out(device_name):
         for prefix, entries in rib[device_name].items():
             for entry in entries:
                 entry_out = copy.deepcopy(entry)
-                if interface['OutBgpPolicy'] != None:
+                if interface['OutBgpPolicy'] is not None:
                     out_policy = policy_dict[interface['OutBgpPolicy']]
                     res = apply_policy_on_rib_entry(
                         out_policy['PolicyClauses'], entry_out)
